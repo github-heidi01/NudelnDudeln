@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
 using NudelnDudeln.Data;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,11 @@ namespace NudelnDudeln
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddRouting();
             services.AddSingleton<WeatherForecastService>();
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("AppDbContext"))
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

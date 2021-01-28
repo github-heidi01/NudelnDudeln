@@ -1,0 +1,33 @@
+﻿@page "/foodunits"
+@using NudelnDudeln.Models Models
+@using System.Collections.Generic;
+@using System.Linq;
+@inject NudelnDudeln.Data.AppDbContext AppDbContext
+
+<h3>Food Units</h3>
+
+<div class="listContainer">
+    <ul>
+        @foreach (var fu in FoodUnitList)
+        {
+            <li class="foodUnit">
+                @fu.UnitName
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+
+    private IEnumerable<Models.FoodUnit> FoodUnitList = new List<Models.FoodUnit>();
+
+    protected override void OnInitialized()
+    {
+        IQueryable<Models.FoodUnit> foodUnitQuery = from fu in AppDbContext.FoodUnit
+                                                                 orderby fu.UnitName descending
+                                                                 select fu;
+
+        FoodUnitList = foodUnitQuery.ToList();
+    }
+
+}
