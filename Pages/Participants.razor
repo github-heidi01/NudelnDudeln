@@ -13,7 +13,7 @@
 
 <div class="listContainer">
     <table>
-        @foreach (var part in @FilteredParticipantList)
+        @foreach (var part in @FilteredItems)
         {
             <tr class="line">
                 <td>
@@ -23,10 +23,10 @@
                     @part.CreatedOn.Date
                 </td>
                 <td>
-                    <a class="clickable" @onclick="@(async () => await SaveDeleteParticipant(@part) )">DELETE</a>
+                    <a class="clickable" @onclick="@(async () => await SaveDelete(@part) )">DELETE</a>
                 </td>
                 <td>
-                    <a class="clickable" @onclick="@(async () => UpdateParticipant(@part))">UPDATE</a>
+                    <a class="clickable" @onclick="@(async () => Update(@part))">UPDATE</a>
                 </td>
             </tr>
         }
@@ -36,7 +36,7 @@
 
 @if (@participantToChange != null)
 {
-    <EditForm Model="@participantToChange" OnValidSubmit="@(async () => await SaveUpdateParticipant(@participantToChange))">
+    <EditForm Model="@participantToChange" OnValidSubmit="@(async () => await SaveUpdate(@participantToChange))">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -72,13 +72,13 @@ else
     private Participant participant = new Participant();
     private Participant participantToChange = null;
     bool changeAction = false;
-    private IEnumerable<Models.Participant> ParticipantList, FilteredParticipantList = new List<Models.Participant>();
+    private IEnumerable<Models.Participant> Items, FilteredItems = new List<Models.Participant>();
 
 
     protected void FilterList(ChangeEventArgs filter)
     {
         var filterBy = filter.Value.ToString().ToLower();
-        FilteredParticipantList = ParticipantList.Where(li => li.Name.ToLower().Contains(filterBy));
+        FilteredItems = Items.Where(li => li.Name.ToLower().Contains(filterBy));
     }
 
 
@@ -88,8 +88,8 @@ else
                                                           orderby p.Name ascending
                                                           select p;
 
-        ParticipantList = participantQuery.ToList();
-        FilteredParticipantList = ParticipantList;
+        Items = participantQuery.ToList();
+        FilteredItems = Items;
     }
 
 
@@ -105,11 +105,11 @@ else
 
     protected async Task CreateParticipant()
     {
-        await SaveParticipant();
+        await Save();
         Load();
     }
 
-    protected async Task SaveParticipant()
+    protected async Task Save()
     {
         try
         {
@@ -126,12 +126,12 @@ else
 
     protected async Task DeleteParticipant(Participant _participant)
     {
-        await SaveDeleteParticipant(_participant);
+        await SaveDelete(_participant);
         Load();
     }
 
 
-    protected async Task SaveDeleteParticipant(Participant _participant)
+    protected async Task SaveDelete(Participant _participant)
     {
         try
         {
@@ -145,12 +145,12 @@ else
         }
     }
 
-    protected void UpdateParticipant(Participant _participant)
+    protected void Update(Participant _participant)
     {
         participantToChange = _participant;
     }
 
-    protected async Task SaveUpdateParticipant(Participant _participant)
+    protected async Task SaveUpdate(Participant _participant)
     {
         if (_participant == null)
         { }
