@@ -9,40 +9,41 @@
 
 <h3>Nudel Connaisseurs</h3>
 
-<div>@NavManager.Uri.Split('/')[4]</div>
+<input type="text" @oninput="@FilterList"/>
 
 <div class="listContainer">
     <table>
         @foreach (var part in @FilteredParticipantList)
         {
-            <tr class="line_@ToggleLine(lineToggle)">
-                <td>
-                    @part.Name
-                </td>
-                <td>
-                    @part.CreatedOn.Date
-                </td>
-                <td>
-                    <a class="clickable" href="" @onclick="@(async () => await DeleteParticipant(part.Id) )">DELETE</a>
-                </td>
-                <td>
-                    <a class="clickable" href="" @onclick="@(async () => ForwardUpdateParticipant(part.Id))">UPDATE</a>
-                </td>
-            </tr>
+        <tr class="line">
+            <td>
+                @part.Name
+            </td>
+            <td>
+                @part.CreatedOn.Date
+            </td>
+            <td>
+                <a class="clickable" @onclick="@(async () => await DeleteParticipant(part) )">DELETE</a>
+            </td>
+            <td>
+                <a class="clickable" @onclick="@(async () => UpdateParticipant(part))">UPDATE</a>
+            </td>
+        </tr>
         }
     </table>
 </div>
 
-@if (ParticipantId > 0 && GetUriFunction() == "update")
+
+@if (@participantToChange != null)
 {
-    <EditForm Model="@participantToUpdate" OnValidSubmit="@(async () => await SaveUpdateParticipant())">
+    <EditForm Model="@participantToChange" OnValidSubmit="@(async () => await SaveUpdateParticipant())">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        Id: @participantToUpdate.Id
+        Id: @participantToChange.Id
         <label>
             Name:
-            <InputText id="name" @bind-Value="@participantToUpdate.Name" />
+            <InputText id="name" @bind-Value="@participantToChange.Name" />
         </label>
         <button type="submit" class="action">Update</button>
     </EditForm>
@@ -69,19 +70,19 @@ else
     public readonly string[] action = new string[] { "update", "delete" };
 
     private Participant participant = new Participant();
-    private Participant participantToUpdate = new Participant();
-    short lineToggle = 1;
+    private Participant participantToChange = null;
     bool changeAction = false;
     private IEnumerable<Models.Participant> ParticipantList, FilteredParticipantList = new List<Models.Participant>();
 
 
-    protected string GetUriFunction()
+    protected void FilterList(ChangeEventArgs filter)
     {
-        return @NavManager.Uri.Length > 4 ? @NavManager.Uri.Split('/')[4] : null;
+        var filterBy = filter.Value.ToString().ToLower();
+        FilteredParticipantList = ParticipantList.Where(li => li.Name.ToLower().Contains(filterBy));
     }
 
 
-    protected void Load()
+    protected async Task Load()
     {
         IQueryable<Models.Participant> participantQuery = from p in AppDbContext.Participant
                                                           orderby p.Name ascending
@@ -89,26 +90,12 @@ else
 
         ParticipantList = participantQuery.ToList();
         FilteredParticipantList = ParticipantList;
-        UpdateParticipant(ParticipantId);
-        if (GetUriFunction() == "delete")
-        {
-            // TODO: call delete on participant with id from url
-        }
-
-        if (participantToUpdate == null)
-        { }
-
     }
 
 
     protected override void OnInitialized()
     {
         Load();
-    }
-
-    protected short ToggleLine(short toggle)
-    {
-        return (toggle == 0) ? 1 : toggle;
     }
 
     protected override void OnParametersSet()
@@ -119,7 +106,7 @@ else
     protected async Task CreateParticipant()
     {
         await SaveParticipant();
-        Load();
+        await Load();
     }
 
     protected async Task SaveParticipant()
@@ -137,24 +124,18 @@ else
     }
 
 
-    protected async Task DeleteParticipant(int _id)
+    protected async Task DeleteParticipant(Participant _participant)
     {
-        await SaveDeleteParticipant(_id);
-
-        Load();
-        // NavManager.NavigateTo("/participants");
+        await SaveDeleteParticipant(_participant);
+        await Load();
     }
 
 
-    protected async Task SaveDeleteParticipant(int _id)
+    protected async Task SaveDeleteParticipant(Participant _participant)
     {
-        var toDelete = await AppDbContext.Participant.FindAsync(_id);
-        if (toDelete == null)
-        { }
-
         try
         {
-            AppDbContext.Participant.Remove(toDelete);
+            AppDbContext.Participant.Remove(_participant);
             await AppDbContext.SaveChangesAsync();
         }
         catch (Exception e)
@@ -163,29 +144,21 @@ else
         }
     }
 
-
-    protected void ForwardUpdateParticipant(int _id)
+    protected void UpdateParticipant(Participant _participant)
     {
-        NavManager.NavigateTo(@NavManager.Uri.Split('/')[3] + "/update/" + _id.ToString());
+        participantToChange = _participant;
     }
-
-    // TODO: make the function more genralin order to support delete too
-    protected void UpdateParticipant(int _id)
-    {
-        participantToUpdate = AppDbContext.Participant.Find(_id);
-    }
-
 
     protected async Task SaveUpdateParticipant()
     {
-        if (participantToUpdate == null)
+        if (participantToChange == null)
         { }
 
         try
         {
-            AppDbContext.Participant.Update(participantToUpdate);
+            AppDbContext.Participant.Update(participantToChange);
             await AppDbContext.SaveChangesAsync();
-            Load();
+            await Load();
         }
         catch (Exception e)
         {
