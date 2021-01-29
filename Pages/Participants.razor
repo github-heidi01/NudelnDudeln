@@ -9,26 +9,26 @@
 
 <h3>Nudel Connaisseurs</h3>
 
-<input type="text" @oninput="@FilterList"/>
+<input type="text" @oninput="@FilterList" />
 
 <div class="listContainer">
     <table>
         @foreach (var part in @FilteredParticipantList)
         {
-        <tr class="line">
-            <td>
-                @part.Name
-            </td>
-            <td>
-                @part.CreatedOn.Date
-            </td>
-            <td>
-                <a class="clickable" @onclick="@(async () => await DeleteParticipant(part) )">DELETE</a>
-            </td>
-            <td>
-                <a class="clickable" @onclick="@(async () => UpdateParticipant(part))">UPDATE</a>
-            </td>
-        </tr>
+            <tr class="line">
+                <td>
+                    @part.Name
+                </td>
+                <td>
+                    @part.CreatedOn.Date
+                </td>
+                <td>
+                    <a class="clickable" @onclick="@(async () => await SaveDeleteParticipant(@part) )">DELETE</a>
+                </td>
+                <td>
+                    <a class="clickable" @onclick="@(async () => UpdateParticipant(@part))">UPDATE</a>
+                </td>
+            </tr>
         }
     </table>
 </div>
@@ -36,7 +36,7 @@
 
 @if (@participantToChange != null)
 {
-    <EditForm Model="@participantToChange" OnValidSubmit="@(async () => await SaveUpdateParticipant())">
+    <EditForm Model="@participantToChange" OnValidSubmit="@(async () => await SaveUpdateParticipant(@participantToChange))">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
@@ -82,7 +82,7 @@ else
     }
 
 
-    protected async Task Load()
+    protected void Load()
     {
         IQueryable<Models.Participant> participantQuery = from p in AppDbContext.Participant
                                                           orderby p.Name ascending
@@ -106,7 +106,7 @@ else
     protected async Task CreateParticipant()
     {
         await SaveParticipant();
-        await Load();
+        Load();
     }
 
     protected async Task SaveParticipant()
@@ -127,7 +127,7 @@ else
     protected async Task DeleteParticipant(Participant _participant)
     {
         await SaveDeleteParticipant(_participant);
-        await Load();
+        Load();
     }
 
 
@@ -137,6 +137,7 @@ else
         {
             AppDbContext.Participant.Remove(_participant);
             await AppDbContext.SaveChangesAsync();
+            Load();
         }
         catch (Exception e)
         {
@@ -149,16 +150,16 @@ else
         participantToChange = _participant;
     }
 
-    protected async Task SaveUpdateParticipant()
+    protected async Task SaveUpdateParticipant(Participant _participant)
     {
-        if (participantToChange == null)
+        if (_participant == null)
         { }
 
         try
         {
-            AppDbContext.Participant.Update(participantToChange);
+            AppDbContext.Participant.Update(_participant);
             await AppDbContext.SaveChangesAsync();
-            await Load();
+            Load();
         }
         catch (Exception e)
         {

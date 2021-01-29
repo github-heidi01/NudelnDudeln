@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace NudelnDudeln.Models
 {
-    public class Participant
+    public class Participant : IModels
     {
         public int Id { get; set; }
         [StringLength(200, MinimumLength = 3)]
