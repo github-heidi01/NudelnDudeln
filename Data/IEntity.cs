@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace NudelnDudeln.Models
+namespace NudelnDudeln.Data
 {
-    public class FoodUnit : Unit
+    public interface IEntity
     {
+        int Id { get; set; }
     }
 }

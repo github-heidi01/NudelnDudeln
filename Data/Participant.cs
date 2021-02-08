@@ -4,12 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
-namespace NudelnDudeln.Models
+namespace NudelnDudeln.Data
 {
-    public class Food
+    public class Participant : IEntity
     {
         public int Id { get; set; }
         [StringLength(200, MinimumLength = 3)]
-        public string FoodItem { get; set; }
+        public string Name { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 }

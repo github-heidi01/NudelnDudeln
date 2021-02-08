@@ -1,10 +1,12 @@
 ﻿@page "/participants"
 @page "/participants/update/{ParticipantId:int}"
 @page "/participants/delete/{ParticipantId:int}"
-@using NudelnDudeln.Models Models
+
+@using NudelnDudeln.Data Data;
 @using System.Collections.Generic;
 @using System.Linq;
 @inject NudelnDudeln.Data.AppDbContext AppDbContext
+@inject NudelnDudeln.Data.EFCore.EfCoreParticipantRepository ParticipantRepo;
 @inject NavigationManager NavManager;
 
 <h3>Nudel Connaisseurs</h3>
@@ -23,7 +25,7 @@
                     @part.CreatedOn.Date
                 </td>
                 <td>
-                    <a class="clickable" @onclick="@(async () => await SaveDelete(@part) )">DELETE</a>
+                    <a class="clickable" @onclick="@(async () => await SaveDelete(@part.Id) )">DELETE</a>
                 </td>
                 <td>
                     <a class="clickable" @onclick="@(async () => Update(@part))">UPDATE</a>
@@ -72,7 +74,8 @@ else
     private Participant participant = new Participant();
     private Participant participantToChange = null;
     bool changeAction = false;
-    private IEnumerable<Models.Participant> Items, FilteredItems = new List<Models.Participant>();
+    private IEnumerable<Data.Participant> Items, FilteredItems = new List<Data.Participant>();
+    
 
 
     protected void FilterList(ChangeEventArgs filter)
@@ -82,20 +85,16 @@ else
     }
 
 
-    protected void Load()
+    protected async Task  Load()
     {
-        IQueryable<Models.Participant> participantQuery = from p in AppDbContext.Participant
-                                                          orderby p.Name ascending
-                                                          select p;
-
-        Items = participantQuery.ToList();
+        Items = await ParticipantRepo.GetAll();
         FilteredItems = Items;
     }
 
 
-    protected override void OnInitialized()
+    protected override async void OnInitialized()
     {
-        Load();
+        await Load();
     }
 
     protected override void OnParametersSet()
@@ -106,7 +105,7 @@ else
     protected async Task CreateParticipant()
     {
         await Save();
-        Load();
+        await Load();
     }
 
     protected async Task Save()
@@ -114,8 +113,7 @@ else
         try
         {
             participant.CreatedOn = DateTime.Now;
-            AppDbContext.Participant.Add(participant);
-            await AppDbContext.SaveChangesAsync();
+            await ParticipantRepo.Add(participant);
         }
         catch (Exception e)
         {
@@ -124,20 +122,12 @@ else
     }
 
 
-    protected async Task DeleteParticipant(Participant _participant)
-    {
-        await SaveDelete(_participant);
-        Load();
-    }
-
-
-    protected async Task SaveDelete(Participant _participant)
+    protected async Task SaveDelete(int _participant)
     {
         try
         {
-            AppDbContext.Participant.Remove(_participant);
-            await AppDbContext.SaveChangesAsync();
-            Load();
+            await ParticipantRepo.Delete(_participant);
+            await Load();
         }
         catch (Exception e)
         {
@@ -152,14 +142,10 @@ else
 
     protected async Task SaveUpdate(Participant _participant)
     {
-        if (_participant == null)
-        { }
-
         try
         {
-            AppDbContext.Participant.Update(_participant);
-            await AppDbContext.SaveChangesAsync();
-            Load();
+            await ParticipantRepo.Update(_participant);
+            await Load();
         }
         catch (Exception e)
         {

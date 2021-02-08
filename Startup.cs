@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using NudelnDudeln.Data;
+using NudelnDudeln.Data.EFCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,7 @@ namespace NudelnDudeln
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("AppDbContext"))
             );
+            services.AddScoped<EfCoreParticipantRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

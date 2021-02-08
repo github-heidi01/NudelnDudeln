@@ -1,5 +1,5 @@
 ﻿@page "/foodunits"
-@using NudelnDudeln.Models Models
+@using NudelnDudeln.Data Data
 @using System.Collections.Generic;
 @using System.Linq;
 @inject NudelnDudeln.Data.AppDbContext AppDbContext
@@ -19,13 +19,13 @@
 
 @code {
 
-    private IEnumerable<Models.FoodUnit> FoodUnitList = new List<Models.FoodUnit>();
+    private IEnumerable<Data.FoodUnit> FoodUnitList = new List<Data.FoodUnit>();
 
     protected override void OnInitialized()
     {
-        IQueryable<Models.FoodUnit> foodUnitQuery = from fu in AppDbContext.FoodUnit
-                                                                 orderby fu.UnitName descending
-                                                                 select fu;
+        IQueryable<Data.FoodUnit> foodUnitQuery = from fu in AppDbContext.FoodUnit
+                                                    orderby fu.UnitName descending
+                                                    select fu;
 
         FoodUnitList = foodUnitQuery.ToList();
     }
