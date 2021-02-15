@@ -36,6 +36,9 @@ namespace NudelnDudeln
                 options.UseSqlServer(Configuration.GetConnectionString("AppDbContext"))
             );
             services.AddScoped<EfCoreParticipantRepository>();
+            services.AddScoped<EfCoreFoodRepository>();
+            services.AddScoped<EfCoreCurrencyUnitRepository>();
+            services.AddScoped<EfCoreContributionRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -6,10 +6,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace NudelnDudeln.Data
 {
-    public class Food
+    public class Food : IEntity
     {
         public int Id { get; set; }
+
         [StringLength(200, MinimumLength = 3)]
         public string FoodItem { get; set; }
+
+        public DateTime CreatedOn { get; set; }
     }
 }

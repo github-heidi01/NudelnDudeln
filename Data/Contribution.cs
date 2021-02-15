@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace NudelnDudeln.Data
 {
-    public class Contribution
+    public class Contribution : IEntity
     {
         public int Id { get; set; }
         public Participant Contributor { get; set; }

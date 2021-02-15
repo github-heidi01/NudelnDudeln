@@ -1,0 +1,137 @@
+﻿@page "/fooditems"
+@using NudelnDudeln.Data
+@using System.Collections.Generic
+@using System.Linq
+@inject NudelnDudeln.Data.AppDbContext AppDbContext
+@inject NudelnDudeln.Data.EFCore.EfCoreFoodRepository FoodRepo
+
+<h3>Food Items</h3>
+
+<div class="listContainer">
+    <table>
+        @foreach (var fi in FilteredItems)
+        {
+            <tr class="line">
+                <td>@fi.FoodItem</td>
+                <td>@fi.CreatedOn</td>
+                <td>
+                    <a class="clickable" @onclick="@(async () => await SaveDelete(@fi.Id) )">DELETE</a>
+                </td>
+                <td>
+                    <a class="clickable" @onclick="@(async () => Update(@fi))">UPDATE</a>
+                </td>
+            </tr>
+        }
+    </table>
+</div>
+
+@if (@foodToChange != null)
+{
+    <EditForm Model="@foodToChange" OnValidSubmit="@(async () => await SaveUpdate(foodToChange))">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        Id: @foodToChange.Id
+        <label>
+            Name:
+            <InputText id="name" @bind-Value="@foodToChange.FoodItem" />
+        </label>
+        <button type="submit" class="action">Update</button>
+    </EditForm>
+}
+else
+{
+<EditForm Model="@food" OnValidSubmit="@(async () => await Save())">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <label>
+        Name:
+        <InputText id="name" @bind-Value="@food.FoodItem" />
+    </label>
+    <button type="submit" class="action">Save</button>
+</EditForm>
+}
+
+@code {
+    [Parameter]
+    public int FoodId { get; set; }
+
+    // public readonly string[] action = new string[] { "update", "delete" };
+
+    private Food food = new Food();
+    private Food foodToChange = null;
+    // bool changeAction = false;
+    private IEnumerable<Data.Food> Items, FilteredItems = new List<Data.Food>();
+
+
+
+    protected void FilterList(ChangeEventArgs filter)
+    {
+        var filterBy = filter.Value.ToString().ToLower();
+        FilteredItems = Items.Where(li => li.FoodItem.ToLower().Contains(filterBy));
+    }
+
+
+    protected async Task Load()
+    {
+        Items = await FoodRepo.GetAll();
+        FilteredItems = Items;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    protected async Task Save()
+    {
+        try
+        {
+            food.CreatedOn = DateTime.Now;
+            await FoodRepo.Add(food);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+
+    protected async Task SaveDelete(int _food)
+    {
+        try
+        {
+            await FoodRepo.Delete(_food);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    protected void Update(Food _food)
+    {
+        foodToChange = _food;
+    }
+
+    protected async Task SaveUpdate(Food _food)
+    {
+        try
+        {
+            await FoodRepo.Update(_food);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+}

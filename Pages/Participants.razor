@@ -1,12 +1,9 @@
 ﻿@page "/participants"
-@page "/participants/update/{ParticipantId:int}"
-@page "/participants/delete/{ParticipantId:int}"
-
-@using NudelnDudeln.Data Data;
-@using System.Collections.Generic;
-@using System.Linq;
+@using NudelnDudeln.Data
+@using System.Collections.Generic
+@using System.Linq
 @inject NudelnDudeln.Data.AppDbContext AppDbContext
-@inject NudelnDudeln.Data.EFCore.EfCoreParticipantRepository ParticipantRepo;
+@inject NudelnDudeln.Data.EFCore.EfCoreParticipantRepository ParticipantRepo
 @inject NavigationManager NavManager;
 
 <h3>Nudel Connaisseurs</h3>
@@ -52,7 +49,7 @@
 }
 else
 {
-    <EditForm Model="@participant" OnValidSubmit="@(async () => await CreateParticipant())">
+    <EditForm Model="@participant" OnValidSubmit="@(async () => await Save())">
         <DataAnnotationsValidator />
         <ValidationSummary />
         <label>
@@ -75,7 +72,7 @@ else
     private Participant participantToChange = null;
     bool changeAction = false;
     private IEnumerable<Data.Participant> Items, FilteredItems = new List<Data.Participant>();
-    
+
 
 
     protected void FilterList(ChangeEventArgs filter)
@@ -85,27 +82,21 @@ else
     }
 
 
-    protected async Task  Load()
+    protected async Task Load()
     {
         Items = await ParticipantRepo.GetAll();
         FilteredItems = Items;
     }
 
 
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        await Load();
+        Load();
     }
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-    }
-
-    protected async Task CreateParticipant()
-    {
-        await Save();
-        await Load();
     }
 
     protected async Task Save()
@@ -114,6 +105,7 @@ else
         {
             participant.CreatedOn = DateTime.Now;
             await ParticipantRepo.Add(participant);
+            await Load();
         }
         catch (Exception e)
         {

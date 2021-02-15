@@ -1,0 +1,152 @@
+﻿@page "/contributions"
+@using NudelnDudeln.Data
+@using System.Collections.Generic;
+@using System.Linq;
+@inject NudelnDudeln.Data.AppDbContext AppDbContext
+@inject NudelnDudeln.Data.EFCore.EfCoreContributionRepository ContribRepo
+@inject NudelnDudeln.Data.EFCore.EfCoreParticipantRepository ParticipantRepo
+@inject NudelnDudeln.Data.EFCore.EfCoreCurrencyUnitRepository CurrencyUnitRepo
+
+<h3>Contributions</h3>
+
+<div class="listContainer">
+    <table>
+        @if (dataIsLoaded && @FilteredItems.Count() > 0)
+        {
+            @foreach (var fi in @FilteredItems)
+            {
+                <tr class="line">
+                    <td>@fi.Contributor.Name</td>
+                    <td>@fi.Amount @fi.Currency</td>
+                    <td>@fi.ContributedOn</td>
+                    <td>
+                        <a class="clickable" @onclick="@(async () => await SaveDelete(@fi.Id) )">DELETE</a>
+                    </td>
+                    <td>
+                        <a class="clickable" @onclick="@(async () => Update(@fi))">UPDATE</a>
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+</div>
+
+@if (contributionToChange != null)
+{
+
+}
+else
+{
+    @if (dataIsLoaded)
+    {
+        <EditForm Model="@contribution" OnValidSubmit="@Save">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <label>Participant:
+                <InputSelect id="participant" @bind-Value="@contribution.Contributor">
+                    @foreach (var participant in Participants )
+                    {
+                        <option value="@participant">@participant.Name</option>
+                    }
+                </InputSelect>
+            </label>
+            <label> Currency:
+                <InputSelect id="currency" @bind-Value="@contribution.Currency">
+                    @foreach (var currency in CurrencyUnits)
+                    {
+                        <option value="@currency">@currency.UnitName</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                Amount:
+                <InputNumber id="amount" @bind-Value="contribution.Amount" />
+            </label>    
+            <button type="submit" class="action">Save</button>
+
+        </EditForm>
+
+    }
+
+}
+
+
+
+@code {
+
+    private IEnumerable<Participant> Participants = new List<Participant>();
+    private IEnumerable<CurrencyUnit> CurrencyUnits = new List<CurrencyUnit>();
+
+    private Contribution contribution = new Contribution();
+    private Contribution contributionToChange = null;
+
+    private bool dataIsLoaded = false;
+
+    public IEnumerable<Contribution> Contributions, FilteredItems = new List<Contribution>();
+
+    protected async Task Load()
+    {
+        Contributions = await ContribRepo.GetAll();
+        FilteredItems = Contributions;
+        Participants = await ParticipantRepo.GetAll();
+        CurrencyUnits = await CurrencyUnitRepo.GetAll();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+        dataIsLoaded = true;
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    protected async Task Save()
+    {
+        try
+        {
+            contribution.ContributedOn = DateTime.Now;
+            await ContribRepo.Add(contribution);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+
+    protected async Task SaveDelete(int _food)
+    {
+        try
+        {
+            await ContribRepo.Delete(_food);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    protected void Update(Contribution _contribution)
+    {
+        contributionToChange = _contribution;
+    }
+
+    protected async Task SaveUpdate(Contribution _contribution)
+    {
+        try
+        {
+            await ContribRepo.Update(_contribution);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+}

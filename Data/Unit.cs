@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace NudelnDudeln.Data
 {
-    public class Unit
+    public class Unit : IEntity
     {
         public int Id { get; set; }
         [StringLength(50, MinimumLength = 1)]
