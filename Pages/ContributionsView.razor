@@ -17,7 +17,7 @@
             {
                 <tr class="line">
                     <td>@fi.Contributor.Name</td>
-                    <td>@fi.Amount @fi.Currency</td>
+                    <td>@fi.Amount @fi.Currency.UnitName</td>
                     <td>@fi.ContributedOn</td>
                     <td>
                         <a class="clickable" @onclick="@(async () => await SaveDelete(@fi.Id) )">DELETE</a>
@@ -33,7 +33,38 @@
 
 @if (contributionToChange != null)
 {
+    <EditForm Model="@contributionToChange" OnValidSubmit="@(async () => await SaveUpdate(@contributionToChange))">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
+        Id: @contributionToChange.Id
+        <label>
+            Participant:
+            <InputSelect id="participant" @bind-Value="@participantId">
+                <option selected value="@contributionToChange.Contributor.Id">@contributionToChange.Contributor.Name</option>
+                @foreach (var participant in Participants)
+                    {
+                    <option value="@participant.Id">@participant.Name</option>
+                    }
+            </InputSelect>
+        </label>
+        <label>
+            Currency:
+            <InputSelect id="currency" @bind-Value="@currencyId">
+                <option selected value="@contributionToChange.Currency.Id">@contributionToChange.Currency.UnitName</option>
+                @foreach (var currency in CurrencyUnits)
+                {
+                    <option value="@currency.Id">@currency.UnitName</option>
+                }
+            </InputSelect>
+        </label>
+        <label>
+            Amount:
+            <InputNumber id="amount" @bind-Value="@contributionToChange.Amount" />
+        </label>
+        <button type="submit" class="action">Update</button>
+
+    </EditForm>
 }
 else
 {
@@ -42,19 +73,21 @@ else
         <EditForm Model="@contribution" OnValidSubmit="@Save">
             <DataAnnotationsValidator />
             <ValidationSummary />
-            <label>Participant:
-                <InputSelect id="participant" @bind-Value="@contribution.Contributor">
+            <label>
+                Participant:
+                <InputSelect id="participant" @bind-Value="@participantId">
                     @foreach (var participant in Participants )
                     {
-                        <option value="@participant">@participant.Name</option>
+                        <option value="@participant.Id">@participant.Name</option>
                     }
                 </InputSelect>
             </label>
-            <label> Currency:
-                <InputSelect id="currency" @bind-Value="@contribution.Currency">
+            <label>
+                Currency:
+                <InputSelect id="currency" @bind-Value="@currencyId">
                     @foreach (var currency in CurrencyUnits)
                     {
-                        <option value="@currency">@currency.UnitName</option>
+                        <option value="@currency.Id">@currency.UnitName</option>
                     }
                 </InputSelect>
             </label>
@@ -65,7 +98,6 @@ else
             <button type="submit" class="action">Save</button>
 
         </EditForm>
-
     }
 
 }
@@ -79,6 +111,9 @@ else
 
     private Contribution contribution = new Contribution();
     private Contribution contributionToChange = null;
+
+    private int currencyId;
+    private int participantId;
 
     private bool dataIsLoaded = false;
 
@@ -109,6 +144,8 @@ else
         try
         {
             contribution.ContributedOn = DateTime.Now;
+            contribution.Contributor = await ParticipantRepo.Get(participantId);
+            contribution.Currency = await CurrencyUnitRepo.Get(currencyId);
             await ContribRepo.Add(contribution);
             await Load();
         }
@@ -141,6 +178,8 @@ else
     {
         try
         {
+            _contribution.Contributor = await ParticipantRepo.Get(participantId);
+            _contribution.Currency = await CurrencyUnitRepo.Get(currencyId);
             await ContribRepo.Update(_contribution);
             await Load();
         }

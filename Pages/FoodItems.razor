@@ -41,15 +41,15 @@
 }
 else
 {
-<EditForm Model="@food" OnValidSubmit="@(async () => await Save())">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <label>
-        Name:
-        <InputText id="name" @bind-Value="@food.FoodItem" />
-    </label>
-    <button type="submit" class="action">Save</button>
-</EditForm>
+    <EditForm Model="@food" OnValidSubmit="@(async () => await Save())">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <label>
+            Name:
+            <InputText id="name" @bind-Value="@food.FoodItem" />
+        </label>
+        <button type="submit" class="action">Save</button>
+    </EditForm>
 }
 
 @code {
