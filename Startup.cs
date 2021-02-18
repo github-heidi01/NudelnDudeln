@@ -37,8 +37,10 @@ namespace NudelnDudeln
             );
             services.AddScoped<EfCoreParticipantRepository>();
             services.AddScoped<EfCoreFoodRepository>();
+            services.AddScoped<EfCoreFoodUnitRepository>();
             services.AddScoped<EfCoreCurrencyUnitRepository>();
             services.AddScoped<EfCoreContributionRepository>();
+            services.AddScoped<EfCoreConsumptionRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

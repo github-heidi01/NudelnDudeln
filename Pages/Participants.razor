@@ -70,7 +70,7 @@ else
 
     private Participant participant = new Participant();
     private Participant participantToChange = null;
-    bool changeAction = false;
+    // bool changeAction = false;
     private IEnumerable<Data.Participant> Items, FilteredItems = new List<Data.Participant>();
 
 
@@ -91,7 +91,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Load();
+        await Load();
     }
 
     protected override void OnParametersSet()

@@ -96,7 +96,6 @@ else
                 <InputNumber id="amount" @bind-Value="contribution.Amount" />
             </label>    
             <button type="submit" class="action">Save</button>
-
         </EditForm>
     }
 
@@ -156,11 +155,11 @@ else
     }
 
 
-    protected async Task SaveDelete(int _food)
+    protected async Task SaveDelete(int _contribution)
     {
         try
         {
-            await ContribRepo.Delete(_food);
+            await ContribRepo.Delete(_contribution);
             await Load();
         }
         catch (Exception e)

@@ -1,0 +1,211 @@
+﻿@page "/consumptions"
+@using NudelnDudeln.Data
+@using System.Collections.Generic;
+@using System.Linq;
+@inject NudelnDudeln.Data.AppDbContext AppDbContext
+@inject NudelnDudeln.Data.EFCore.EfCoreConsumptionRepository ConsumRepo
+@inject NudelnDudeln.Data.EFCore.EfCoreParticipantRepository ParticipantRepo
+@inject NudelnDudeln.Data.EFCore.EfCoreFoodRepository FoodRepo
+@inject NudelnDudeln.Data.EFCore.EfCoreFoodUnitRepository FoodUnitRepo
+
+<h3>Consumptions</h3>
+
+<div class="listContainer">
+    <table>
+        @if (dataIsLoaded && @FilteredItems.Count() > 0)
+        {
+            @foreach (var fi in @FilteredItems)
+            {
+                <tr class="line">
+                    <td>@fi.FoodItem.FoodItem</td>
+                    <td>@fi.Amount @fi.Unit.UnitName</td>
+                    <td>@fi.Consumer.Name</td>
+                    <td>@fi.ConsumedOn</td>
+                    <td>
+                        <a class="clickable" @onclick="@(async () => await SaveDelete(@fi.Id) )">DELETE</a>
+                    </td>
+                    <td>
+                        <a class="clickable" @onclick="@(async () => Update(@fi))">UPDATE</a>
+                    </td>
+                </tr>
+            }
+        }
+    </table>
+</div>
+
+@if (consumptionToChange != null)
+{
+    <EditForm Model="@consumptionToChange" OnValidSubmit="@(async () => await SaveUpdate(@consumptionToChange))">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <label>
+            Food:
+            <InputSelect id="foodItem" @bind-Value="@foodItemId">
+                <option selected value="@consumptionToChange.FoodItem.Id">@consumptionToChange.FoodItem.FoodItem</option>
+                @foreach (var foodItem in FoodItems)
+                    {
+                    <option value="@foodItem.Id">@foodItem.FoodItem</option>
+                    }
+            </InputSelect>
+            <InputNumber id="amount" @bind-Value="@foodAmount" />
+
+        </label>
+        <label>
+            Amount:
+            <InputNumber id="amount" @bind-Value="@consumptionToChange.Amount" />
+            <InputSelect id="unit" @bind-Value="@foodUnitId">
+                <option selected value="@consumptionToChange.Unit.Id">@consumptionToChange.Unit.UnitName</option>
+                @foreach (var unit in @FoodUnits)
+                    {
+                    <option value="@unit.Id">@unit.UnitName</option>
+                    }
+            </InputSelect>
+        </label>
+        <label>
+            Consumer:
+            <InputSelect id="participant" @bind-Value="@consumerId">
+                <option selected value="@consumptionToChange.Consumer.Id">@consumptionToChange.Consumer.Name</option>
+                @foreach (var consumer in @Consumers)
+                {
+                    <option value="@consumer.Id">@consumer.Name</option>
+                }
+            </InputSelect>
+        </label>
+        <button type="submit" class="action">Update</button>
+    </EditForm>
+}
+else
+{
+    @if (dataIsLoaded)
+    {
+        <EditForm Model="@consumption" OnValidSubmit="@Save">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <label>
+                Food:
+                <InputSelect id="foodItem" @bind-Value="@foodItemId">
+                    @foreach (var foodItem in @FoodItems)
+                            {
+                        <option value="@foodItem.Id">@foodItem.FoodItem</option>
+                            }
+                </InputSelect>
+            </label>
+            <label>
+                Amount:
+                <InputNumber id="amount" @bind-Value="@consumption.Amount" />
+                <InputSelect id="unit" @bind-Value="@foodUnitId">
+                    @foreach (var unit in @FoodUnits)
+                    {
+                        <option value="@unit.Id">@unit.UnitName</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                Consumer:
+                <InputSelect id="unit" @bind-Value="@consumerId">
+                    @foreach (var consumer in Consumers)
+                    {
+                        <option value="@consumer.Id">@consumer.Name</option>
+                    }
+                </InputSelect>
+            </label>
+            <button type="submit" class="action">Save</button>
+        </EditForm>
+    }
+}
+
+
+
+@code {
+    private IEnumerable<Participant> Consumers = new List<Participant>();
+    private IEnumerable<Food> FoodItems = new List<Food>();
+    private IEnumerable<FoodUnit> FoodUnits = new List<FoodUnit>();
+
+
+
+    private Consumption consumption = new Consumption();
+    private Consumption consumptionToChange = null;
+
+    private int consumerId;
+    private int foodItemId;
+    private decimal foodAmount;
+    private int foodUnitId;
+
+    private bool dataIsLoaded = false;
+
+    public IEnumerable<Consumption> Consumptions, FilteredItems = new List<Consumption>();
+
+    protected async Task Load()
+    {
+        Consumptions = await ConsumRepo.GetAll();
+        FilteredItems = Consumptions;
+        Consumers = await ParticipantRepo.GetAll();
+        FoodItems = await FoodRepo.GetAll();
+        FoodUnits = await FoodUnitRepo.GetAll();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+        dataIsLoaded = true;
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    protected async Task Save()
+    {
+        try
+        {
+            consumption.ConsumedOn = DateTime.Now;
+            consumption.Consumer = await ParticipantRepo.Get(consumerId);
+            consumption.FoodItem = await FoodRepo.Get(foodItemId);
+            consumption.Unit = await FoodUnitRepo.Get(foodUnitId);
+            await ConsumRepo.Add(consumption);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    protected async Task SaveDelete(int _consumption)
+    {
+        try
+        {
+            await ConsumRepo.Delete(_consumption);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    protected void Update(Consumption _consumption)
+    {
+        consumptionToChange = _consumption;
+    }
+
+    protected async Task SaveUpdate(Consumption _consumption)
+    {
+        try
+        {
+            _consumption.Consumer = await ParticipantRepo.Get(consumerId);
+            _consumption.FoodItem = await FoodRepo.Get(foodItemId);
+            _consumption.Unit = await FoodUnitRepo.Get(foodUnitId);
+            await ConsumRepo.Update(_consumption);
+            await Load();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+}
